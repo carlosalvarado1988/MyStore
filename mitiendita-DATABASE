@@ -1,0 +1,483 @@
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
+
+CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci ;
+CREATE SCHEMA IF NOT EXISTS `mitiendita` DEFAULT CHARACTER SET latin1 ;
+USE `mydb` ;
+USE `mitiendita` ;
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`cliente`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`cliente` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`cliente` (
+  `id_cliente` INT(11) NOT NULL AUTO_INCREMENT ,
+  `nombre` VARCHAR(45) NULL DEFAULT NULL ,
+  `telefono` VARCHAR(8) NULL DEFAULT NULL ,
+  `direccion` VARCHAR(100) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_cliente`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`venta_credito_enca`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`venta_credito_enca` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`venta_credito_enca` (
+  `id_venta_cred_enca` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_cliente` INT(11) NULL DEFAULT NULL ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  `estado` VARCHAR(10) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_venta_cred_enca`) ,
+  INDEX `cliente_debe` (`fk_cliente` ASC) ,
+  CONSTRAINT `cliente_debe`
+    FOREIGN KEY (`fk_cliente` )
+    REFERENCES `mitiendita`.`cliente` (`id_cliente` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`deudas`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`deudas` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`deudas` (
+  `id_deuda` INT(11) NULL AUTO_INCREMENT ,
+  `fk_venta_cred_enca` INT(11) NOT NULL ,
+  `saldo` DOUBLE NOT NULL ,
+  `fecha` DATE NOT NULL ,
+  `estado` VARCHAR(15) NOT NULL ,
+  PRIMARY KEY (`id_deuda`) ,
+  INDEX `venta_cred` (`fk_venta_cred_enca` ASC) ,
+  CONSTRAINT `venta_cred`
+    FOREIGN KEY (`fk_venta_cred_enca` )
+    REFERENCES `mitiendita`.`venta_credito_enca` (`id_venta_cred_enca` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`abono_deuda`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`abono_deuda` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`abono_deuda` (
+  `id_abono_deuda` INT(11) NOT NULL AUTO_INCREMENT ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  `fk_deuda` INT(11) NULL ,
+  PRIMARY KEY (`id_abono_deuda`) ,
+  INDEX `deudas` (`fk_deuda` ASC) ,
+  CONSTRAINT `deudas`
+    FOREIGN KEY (`fk_deuda` )
+    REFERENCES `mitiendita`.`deudas` (`id_deuda` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`proveedor`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`proveedor` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`proveedor` (
+  `id_provee` INT(11) NOT NULL AUTO_INCREMENT ,
+  `nombre_provee` VARCHAR(45) NULL DEFAULT NULL ,
+  `telefono` VARCHAR(8) NULL DEFAULT NULL ,
+  `direccion` VARCHAR(100) NULL DEFAULT NULL ,
+  `contacto_provee` VARCHAR(45) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_provee`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`compras_enca`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`compras_enca` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`compras_enca` (
+  `id_compra_enca` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_provee` INT(11) NULL DEFAULT NULL ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `num_factura` VARCHAR(25) NULL DEFAULT NULL ,
+  `estado` VARCHAR(10) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_compra_enca`) ,
+  INDEX `proveedor` (`fk_provee` ASC) ,
+  CONSTRAINT `proveedor`
+    FOREIGN KEY (`fk_provee` )
+    REFERENCES `mitiendita`.`proveedor` (`id_provee` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`marca_prod`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`marca_prod` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`marca_prod` (
+  `id_marca` INT(11) NOT NULL AUTO_INCREMENT ,
+  `nombre_marca` VARCHAR(45) NOT NULL ,
+  `visible` TINYINT(1)  NOT NULL DEFAULT 1 ,
+  PRIMARY KEY (`id_marca`) )
+ENGINE = InnoDB
+AUTO_INCREMENT = 6
+DEFAULT CHARACTER SET = latin1
+COMMENT = '				';
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`tipo_prod`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`tipo_prod` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`tipo_prod` (
+  `id_tipo` INT(11) NOT NULL AUTO_INCREMENT ,
+  `nombre_tipo` VARCHAR(45) NOT NULL ,
+  `visible` TINYINT(1)  NOT NULL DEFAULT 1 ,
+  PRIMARY KEY (`id_tipo`) )
+ENGINE = InnoDB
+AUTO_INCREMENT = 6
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`productos_inventario`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`productos_inventario` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`productos_inventario` (
+  `id_prod` INT(11) NOT NULL AUTO_INCREMENT ,
+  `nombre` VARCHAR(45) NOT NULL ,
+  `fk_marca` INT(11) NOT NULL ,
+  `fk_tipo` INT(11) NOT NULL ,
+  `unidad_medida` VARCHAR(45) NULL ,
+  `precio_costo` DECIMAL(10,2) NOT NULL ,
+  `precio_sugerido` DECIMAL(10,2) NOT NULL ,
+  `cant_disp_prop` DOUBLE NOT NULL ,
+  `cant_disp_conse` DOUBLE NOT NULL ,
+  `codigo` VARCHAR(20) NULL DEFAULT NULL ,
+  `visible` TINYINT(1)  NOT NULL DEFAULT 1 ,
+  PRIMARY KEY (`id_prod`) ,
+  INDEX `marcas` (`fk_marca` ASC) ,
+  INDEX `tipo` (`fk_tipo` ASC) ,
+  CONSTRAINT `marcas`
+    FOREIGN KEY (`fk_marca` )
+    REFERENCES `mitiendita`.`marca_prod` (`id_marca` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `tipo`
+    FOREIGN KEY (`fk_tipo` )
+    REFERENCES `mitiendita`.`tipo_prod` (`id_tipo` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+AUTO_INCREMENT = 3
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`compras_deta`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`compras_deta` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`compras_deta` (
+  `id_compra_deta` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_producto` INT(11) NULL DEFAULT NULL ,
+  `cantidad` DOUBLE NULL DEFAULT NULL ,
+  `precio_unitario` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `precio_total` DECIMAL(10,2) NULL ,
+  `fk_compra_enca` INT(11) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_compra_deta`) ,
+  INDEX `encabezado` (`fk_compra_enca` ASC) ,
+  INDEX `productos` (`fk_producto` ASC) ,
+  CONSTRAINT `encabezado`
+    FOREIGN KEY (`fk_compra_enca` )
+    REFERENCES `mitiendita`.`compras_enca` (`id_compra_enca` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `productos`
+    FOREIGN KEY (`fk_producto` )
+    REFERENCES `mitiendita`.`productos_inventario` (`id_prod` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`consumo_interno_enca`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`consumo_interno_enca` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`consumo_interno_enca` (
+  `id_consumo_interno_enca` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `estado` VARCHAR(10) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_consumo_interno_enca`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`consumo_interno_deta`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`consumo_interno_deta` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`consumo_interno_deta` (
+  `id_consumo_interno_deta` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_producto` INT(11) NULL DEFAULT NULL ,
+  `cantidad` DOUBLE NULL DEFAULT NULL ,
+  `precio_unitario` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `precio_total` DECIMAL(10,2) NULL ,
+  `consecionado` VARCHAR(2) NULL DEFAULT NULL ,
+  `fk_consumo_interno_enca` INT(11) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_consumo_interno_deta`) ,
+  INDEX `consumo_enca` (`fk_consumo_interno_enca` ASC) ,
+  INDEX `produ_consu` (`fk_producto` ASC) ,
+  CONSTRAINT `consumo_enca`
+    FOREIGN KEY (`fk_consumo_interno_enca` )
+    REFERENCES `mitiendita`.`consumo_interno_enca` (`id_consumo_interno_enca` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `produ_consu`
+    FOREIGN KEY (`fk_producto` )
+    REFERENCES `mitiendita`.`productos_inventario` (`id_prod` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`ingreso_prod_concesionado`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`ingreso_prod_concesionado` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`ingreso_prod_concesionado` (
+  `id_concesion` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_proveedor` INT(11) NULL DEFAULT NULL ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `estado` VARCHAR(10) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_concesion`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`ingreso_prod_cons_deta`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`ingreso_prod_cons_deta` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`ingreso_prod_cons_deta` (
+  `id_cons_deta` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_producto` INT(11) NULL DEFAULT NULL ,
+  `cantidad` DOUBLE NULL DEFAULT NULL ,
+  `precio_unitario` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `precio_total` DECIMAL(10,2) NULL ,
+  `fk_consecion` INT(11) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_cons_deta`) ,
+  INDEX `ingres_conse` (`fk_consecion` ASC) ,
+  INDEX `prodc` (`fk_producto` ASC) ,
+  CONSTRAINT `ingres_conse`
+    FOREIGN KEY (`fk_consecion` )
+    REFERENCES `mitiendita`.`ingreso_prod_concesionado` (`id_concesion` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `prodc`
+    FOREIGN KEY (`fk_producto` )
+    REFERENCES `mitiendita`.`productos_inventario` (`id_prod` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`inversion_efectivo`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`inversion_efectivo` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`inversion_efectivo` (
+  `id_inversion_efectivo` INT(11) NOT NULL AUTO_INCREMENT ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_inversion_efectivo`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`bitacora`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`bitacora` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`bitacora` (
+  `id_movimiento` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  `transaccion` VARCHAR(7) NULL DEFAULT NULL ,
+  `nombre_tabla` VARCHAR(45) NULL DEFAULT NULL ,
+  `fk_tabla_id` INT(11) NULL DEFAULT NULL ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_movimiento`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1
+COMMENT = '	';
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`retiros`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`retiros` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`retiros` (
+  `id_retiro_efectivo` INT(11) NOT NULL AUTO_INCREMENT ,
+  `Monto` DECIMAL(10,2) NOT NULL ,
+  `motivo` VARCHAR(200) NULL DEFAULT NULL ,
+  `fecha` DATE NOT NULL ,
+  PRIMARY KEY (`id_retiro_efectivo`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`venta_credito_deta`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`venta_credito_deta` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`venta_credito_deta` (
+  `id_venta_cred_deta` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_prod` INT(11) NULL DEFAULT NULL ,
+  `cantidad` DOUBLE NULL DEFAULT NULL ,
+  `precio` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `precio_total` DECIMAL(10,2) NULL ,
+  `consecionado` VARCHAR(2) NULL ,
+  `id_venta_cred_enca` INT(11) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_venta_cred_deta`) ,
+  INDEX `encab_cred` (`id_venta_cred_enca` ASC) ,
+  INDEX `produ` (`fk_prod` ASC) ,
+  CONSTRAINT `encab_cred`
+    FOREIGN KEY (`id_venta_cred_enca` )
+    REFERENCES `mitiendita`.`venta_credito_enca` (`id_venta_cred_enca` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `produ`
+    FOREIGN KEY (`fk_prod` )
+    REFERENCES `mitiendita`.`productos_inventario` (`id_prod` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`ventas_enca`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`ventas_enca` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`ventas_enca` (
+  `id_venta_enca` INT(11) NOT NULL AUTO_INCREMENT ,
+  `monto` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `fecha` DATE NULL DEFAULT NULL ,
+  `estado` VARCHAR(10) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_venta_enca`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `mitiendita`.`ventas_deta`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mitiendita`.`ventas_deta` ;
+
+CREATE  TABLE IF NOT EXISTS `mitiendita`.`ventas_deta` (
+  `id_venta_deta` INT(11) NOT NULL AUTO_INCREMENT ,
+  `fk_prod` INT(11) NULL DEFAULT NULL ,
+  `cantidad` DOUBLE NULL DEFAULT NULL ,
+  `precio_venta` DECIMAL(10,2) NULL DEFAULT NULL ,
+  `total_venta` DECIMAL(10,2) NULL ,
+  `consecionado` VARCHAR(2) NULL DEFAULT NULL ,
+  `fk_venta_enca` INT(11) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id_venta_deta`) ,
+  INDEX `encabezado_venta` (`fk_venta_enca` ASC) ,
+  INDEX `productos_venta` (`fk_prod` ASC) ,
+  CONSTRAINT `encabezado_venta`
+    FOREIGN KEY (`fk_venta_enca` )
+    REFERENCES `mitiendita`.`ventas_enca` (`id_venta_enca` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `productos_venta`
+    FOREIGN KEY (`fk_prod` )
+    REFERENCES `mitiendita`.`productos_inventario` (`id_prod` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+-- -----------------------------------------------------
+-- Data for table `mitiendita`.`marca_prod`
+-- -----------------------------------------------------
+SET AUTOCOMMIT=0;
+USE `mitiendita`;
+INSERT INTO `mitiendita`.`marca_prod` (`id_marca`, `nombre_marca`, `visible`) VALUES ('1', 'maguii', 1);
+INSERT INTO `mitiendita`.`marca_prod` (`id_marca`, `nombre_marca`, `visible`) VALUES ('2', 'pepsi', 1);
+INSERT INTO `mitiendita`.`marca_prod` (`id_marca`, `nombre_marca`, `visible`) VALUES ('3', 'coca', 1);
+INSERT INTO `mitiendita`.`marca_prod` (`id_marca`, `nombre_marca`, `visible`) VALUES ('4', 'shula', 1);
+INSERT INTO `mitiendita`.`marca_prod` (`id_marca`, `nombre_marca`, `visible`) VALUES ('5', 'knor', 1);
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `mitiendita`.`tipo_prod`
+-- -----------------------------------------------------
+SET AUTOCOMMIT=0;
+USE `mitiendita`;
+INSERT INTO `mitiendita`.`tipo_prod` (`id_tipo`, `nombre_tipo`, `visible`) VALUES ('1', 'comestible', 1);
+INSERT INTO `mitiendita`.`tipo_prod` (`id_tipo`, `nombre_tipo`, `visible`) VALUES ('2', 'liquido', 1);
+INSERT INTO `mitiendita`.`tipo_prod` (`id_tipo`, `nombre_tipo`, `visible`) VALUES ('3', 'solidos', 1);
+INSERT INTO `mitiendita`.`tipo_prod` (`id_tipo`, `nombre_tipo`, `visible`) VALUES ('4', 'adornos', 1);
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `mitiendita`.`productos_inventario`
+-- -----------------------------------------------------
+SET AUTOCOMMIT=0;
+USE `mitiendita`;
+INSERT INTO `mitiendita`.`productos_inventario` (`id_prod`, `nombre`, `fk_marca`, `fk_tipo`, `unidad_medida`, `precio_costo`, `precio_sugerido`, `cant_disp_prop`, `cant_disp_conse`, `codigo`, `visible`) VALUES ('1', 'papel', '1', '2', 'hoja', '0.05', '0.10', '10', '1', '0001', 1);
+INSERT INTO `mitiendita`.`productos_inventario` (`id_prod`, `nombre`, `fk_marca`, `fk_tipo`, `unidad_medida`, `precio_costo`, `precio_sugerido`, `cant_disp_prop`, `cant_disp_conse`, `codigo`, `visible`) VALUES ('2', 'fosforos', '2', '1', 'cajita', '0.07', '0.12', '20', '1', '0002', 1);
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `mitiendita`.`ventas_enca`
+-- -----------------------------------------------------
+SET AUTOCOMMIT=0;
+USE `mitiendita`;
+INSERT INTO `mitiendita`.`ventas_enca` (`id_venta_enca`, `monto`, `fecha`, `estado`) VALUES ('1', '20', '2013-01-01', 'registrado');
+
+COMMIT;
